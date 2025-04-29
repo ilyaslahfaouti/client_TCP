@@ -67,7 +67,20 @@ class Client:
             return
         self.send_to_server(["action", pseudo] + move.to_list())
 
+    def quit(self):
+        print("Fermeture du client.")
+        self.running = False
+
+    def invalid_choice(self):
+        print("Choix invalide.")
+
     def run(self):
+        actions = {
+            '1': self.subscribe,
+            '2': self.send_action,
+            '3': self.quit
+        }
+
         while self.running:
             print("\n--- Menu ---")
             print("1. S'inscrire")
@@ -75,15 +88,8 @@ class Client:
             print("3. Quitter")
             choice = input("Choix : ")
 
-            if choice == '1':
-                self.subscribe()
-            elif choice == '2':
-                self.send_action()
-            elif choice == '3':
-                print("Fermeture du client.")
-                self.running = False
-            else:
-                print("Choix invalide.")
+            # Récupération de la fonction à appeler ou fallback
+            actions.get(choice, self.invalid_choice)()
 
 
 if __name__ == '__main__':
