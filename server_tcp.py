@@ -1,44 +1,72 @@
 import socket
 import json
+from models import Game, Wolf, Villager
 
-HOST = 'localhost' 
-PORT = 9999        r
+HOST = 'localhost'
+PORT = 9999
 
-# Créer la socket du serveur
+game = Game(nb_max_turn=10, width=10, height=5)
+players = {}  # dictionnaire pour stocker les objets Player
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
-    server_sock.bind((HOST, PORT)) 
-    server_sock.listen(1)          
-    print("Serveur en écoute sur", HOST, ":", PORT)
+    server_sock.bind((HOST, PORT))
+    server_sock.listen(5)
+    print(f"Serveur en écoute sur {HOST}:{PORT}")
 
-    # Accepter une connexion entrante
-    conn, addr = server_sock.accept()
-    with conn:
-        print(f"Connexion établie avec {addr}")
+    while True:
+        conn, addr = server_sock.accept()
+        with conn:
+            print(f"Connexion de {addr}")
+            data = conn.recv(1024)
+            if not data:
+                continue
 
-        # Recevoir les données du client
-        data = conn.recv(1024)
-        if data:
-            print("Données reçues:", data.decode('utf-8'))
+            try:
+                message = json.loads(data.decode('utf-8'))
+                print("Message reçu:", message)
 
-            # Convertir les données JSON reçues
-            json_data = json.loads(data.decode('utf-8'))
+                if not isinstance(message, list) or len(message) < 1:
+                    raise ValueError("Format invalide")
 
-            # Exemple de réponse
-            if json_data['type'] == 'subscribe':
-                response = {
-                    'status': 'success',
-                    'message': f"Joueur {json_data['pseudo']} inscrit en tant que {json_data['role']}."
-                }
-            elif json_data['type'] == 'action':
-                response = {
-                    'status': 'success',
-                    'message': f"Joueur {json_data['pseudo']} a effectué un déplacement {json_data['action']}."
-                }
-            else:
-                response = {
-                    'status': 'error',
-                    'message': 'Type inconnu.'
-                }
+                msg_type = message[0]
 
-            # Envoyer une réponse au client
+                if msg_type == "subscribe":
+                    _, pseudo, role = message
+                    if role == "wolf":
+                        player = Wolf(pseudo)
+                    elif role == "villager":
+                        player = Villager(pseudo)
+                    else:
+                        raise ValueError("Rôle inconnu")
+
+                    game._Game__gameboard.subscribe_player(player)
+                    players[pseudo] = player
+
+                    response = {
+                        "status": "success",
+                        "message": f"{pseudo} inscrit comme {role}"
+                    }
+
+                elif msg_type == "action":
+                    _, pseudo, dx, dy = message
+                    player = players.get(pseudo)
+                    if not player:
+                        raise ValueError("Joueur inconnu")
+
+                    game.register_action(player, (dx, dy))
+                    game.process_action()
+                    game._Game__gameboard.end_round()
+
+                    response = {
+                        "status": "success",
+                        "message": f"{pseudo} a bougé ({dx},{dy})",
+                        "gameboard": str(game._Game__gameboard)
+                    }
+
+                else:
+                    response = {"status": "error", "message": "Type inconnu"}
+
+            except Exception as e:
+                response = {"status": "error", "message": str(e)}
+
             conn.sendall(json.dumps(response).encode('utf-8'))

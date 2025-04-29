@@ -1,51 +1,59 @@
 import socket
 import json
 
-# Fonction pour envoyer les données JSON au serveur TCP
-def send_json_to_server(json_data):
-    HOST = 'localhost'  
-    PORT = 9999         
+# Fonction pour envoyer une liste de données JSON au serveur TCP
+def send_list_to_server(lst_data):
+    HOST = 'localhost'
+    PORT = 9999
 
-    # Convertir les données en JSON
-    message = json.dumps(json_data)
+    # Convertir la liste en chaîne JSON
+    message = json.dumps(lst_data)
 
     # Création de la socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((HOST, PORT))  # Se connecter au serveur
-        sock.sendall(message.encode('utf-8'))  # Envoyer les données au serveur
+        try:
+            sock.connect((HOST, PORT))  # Connexion au serveur
+            sock.sendall(message.encode('utf-8'))  # Envoi du message
+            response = sock.recv(4096)  # Réception de la réponse
+            print("Réponse du serveur :", response.decode('utf-8'))
+        except ConnectionRefusedError:
+            print("Erreur : impossible de se connecter au serveur.")
 
-        # Recevoir la réponse du serveur
-        response = sock.recv(1024)
-        print("Réponse du serveur:", response.decode('utf-8'))
+# Menu interactif
+def main():
+    while True:
+        print("\n--- Menu ---")
+        print("1. S'inscrire")
+        print("2. Envoyer une action")
+        print("3. Quitter")
+        choice = input("Choix : ")
 
-# Menu interactif pour envoyer des actions
-while True:
-    print("\n--- Menu ---")
-    print("1. S'inscrire")
-    print("2. Envoyer une action")
-    print("3. Quitter")
-    choice = input("Choix : ")
+        if choice == '1':
+            pseudo = input("Pseudo (1 lettre) : ").strip().upper()
+            role = input("Rôle (wolf/villager) : ").strip().lower()
+            if role not in ["wolf", "villager"]:
+                print("Rôle invalide. Choisissez 'wolf' ou 'villager'.")
+                continue
+            send_list_to_server(["subscribe", pseudo, role])
 
-    if choice == '1':
-        pseudo = input("Pseudo (1 lettre) : ").upper()
-        role = input("Rôle (wolf/villager) : ").lower()
-        send_json_to_server({
-            'type': 'subscribe',
-            'pseudo': pseudo,
-            'role': role
-        })
+        elif choice == '2':
+            pseudo = input("Votre pseudo : ").strip().upper()
+            try:
+                dx = int(input("Déplacement X (-1, 0, 1) : "))
+                dy = int(input("Déplacement Y (-1, 0, 1) : "))
+                if dx not in [-1, 0, 1] or dy not in [-1, 0, 1]:
+                    raise ValueError
+            except ValueError:
+                print("Déplacements invalides. Entrez -1, 0 ou 1.")
+                continue
+            send_list_to_server(["action", pseudo, dx, dy])
 
-    elif choice == '2':
-        pseudo = input("Votre pseudo : ").upper()
-        dx = int(input("Déplacement X (-1, 0, 1) : "))
-        dy = int(input("Déplacement Y (-1, 0, 1) : "))
-        send_json_to_server({
-            'type': 'action',
-            'pseudo': pseudo,
-            'action': [dx, dy]
-        })
+        elif choice == '3':
+            print("Fermeture du client.")
+            break
 
-    elif choice == '3':
-        break
-    else:
-        print("Choix invalide.")
+        else:
+            print("Choix invalide.")
+
+if __name__ == '__main__':
+    main()
