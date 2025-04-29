@@ -35,6 +35,12 @@ class Client:
 
     def __init__(self):
         self.running = True
+        self.menu_actions = {
+            '1': self.subscribe,
+            '2': self.send_action,
+            '3': self.quit,
+            '4': self.show_board
+        }
 
     def send_to_server(self, data):
         message = json.dumps(data)
@@ -43,7 +49,14 @@ class Client:
                 sock.connect((self.HOST, self.PORT))
                 sock.sendall(message.encode('utf-8'))
                 response = sock.recv(4096)
-                print("Réponse du serveur :", response.decode('utf-8'))
+                decoded = response.decode('utf-8')
+
+                # Affichage spécifique pour la commande "board"
+                if data[0] == "board":
+                    print("\n--- Plateau de jeu ---\n")
+                    print(decoded)
+                else:
+                    print("Réponse du serveur :", decoded)
             except ConnectionRefusedError:
                 print("Erreur : impossible de se connecter au serveur.")
 
@@ -67,29 +80,27 @@ class Client:
             return
         self.send_to_server(["action", pseudo] + move.to_list())
 
+    def show_board(self):
+        self.send_to_server(["board"])
+
     def quit(self):
         print("Fermeture du client.")
         self.running = False
 
-    def invalid_choice(self):
-        print("Choix invalide.")
-
     def run(self):
-        actions = {
-            '1': self.subscribe,
-            '2': self.send_action,
-            '3': self.quit
-        }
-
         while self.running:
             print("\n--- Menu ---")
             print("1. S'inscrire")
             print("2. Envoyer une action")
             print("3. Quitter")
+            print("4. Afficher le plateau")
             choice = input("Choix : ")
 
-            # Récupération de la fonction à appeler ou fallback
-            actions.get(choice, self.invalid_choice)()
+            action = self.menu_actions.get(choice)
+            if action:
+                action()
+            else:
+                print("Choix invalide.")
 
 
 if __name__ == '__main__':
