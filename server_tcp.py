@@ -1,13 +1,13 @@
 import socket
 import json
 
-HOST = 'localhost'  # Adresse du serveur
-PORT = 9999         # Port du serveur
+HOST = 'localhost' 
+PORT = 9999        r
 
 # Créer la socket du serveur
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
-    server_sock.bind((HOST, PORT))  # Lier l'adresse et le port
-    server_sock.listen(1)           # Écouter les connexions
+    server_sock.bind((HOST, PORT)) 
+    server_sock.listen(1)          
     print("Serveur en écoute sur", HOST, ":", PORT)
 
     # Accepter une connexion entrante

@@ -3,8 +3,8 @@ import json
 
 # Fonction pour envoyer les données JSON au serveur TCP
 def send_json_to_server(json_data):
-    HOST = 'localhost'  # Adresse du serveur
-    PORT = 9999         # Port du serveur
+    HOST = 'localhost'  
+    PORT = 9999         
 
     # Convertir les données en JSON
     message = json.dumps(json_data)
