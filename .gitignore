@@ -1,0 +1,5 @@
+# Ignore les fichiers compilés Python
+__pycache__/
+*.py[cod]
+
+# (autres règles si nécessaires)
