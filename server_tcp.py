@@ -6,7 +6,7 @@ HOST = 'localhost'
 PORT = 9999
 
 game = Game(nb_max_turn=10, width=10, height=5)
-players = {} 
+players = {}
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
     server_sock.bind((HOST, PORT))

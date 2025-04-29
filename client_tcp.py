@@ -2,7 +2,6 @@ import socket
 import json
 from enum import Enum
 
-
 class Role(Enum):
     WOLF = "wolf"
     VILLAGER = "villager"
@@ -17,7 +16,6 @@ class Role(Enum):
         else:
             return None
 
-
 class Move:
     def __init__(self, dx: int, dy: int):
         if dx not in [-1, 0, 1] or dy not in [-1, 0, 1]:
@@ -28,19 +26,12 @@ class Move:
     def to_list(self):
         return [self.dx, self.dy]
 
-
 class Client:
     HOST = 'localhost'
     PORT = 9999
 
     def __init__(self):
         self.running = True
-        self.menu_actions = {
-            '1': self.subscribe,
-            '2': self.send_action,
-            '3': self.quit,
-            '4': self.show_board
-        }
 
     def send_to_server(self, data):
         message = json.dumps(data)
@@ -49,14 +40,7 @@ class Client:
                 sock.connect((self.HOST, self.PORT))
                 sock.sendall(message.encode('utf-8'))
                 response = sock.recv(4096)
-                decoded = response.decode('utf-8')
-
-                # Affichage spécifique pour la commande "board"
-                if data[0] == "board":
-                    print("\n--- Plateau de jeu ---\n")
-                    print(decoded)
-                else:
-                    print("Réponse du serveur :", decoded)
+                print("Réponse du serveur :", response.decode('utf-8'))
             except ConnectionRefusedError:
                 print("Erreur : impossible de se connecter au serveur.")
 
@@ -67,7 +51,13 @@ class Client:
         if not role:
             print("Rôle invalide. Choisissez 'wolf' ou 'villager'.")
             return
-        self.send_to_server(["subscribe", pseudo, role.value])
+        data = {
+            "subscribe": {
+                "pseudo": pseudo,
+                "role": role.value
+            }
+        }
+        self.send_to_server(data)
 
     def send_action(self):
         pseudo = input("Votre pseudo : ").strip().upper()
@@ -78,27 +68,38 @@ class Client:
         except ValueError:
             print("Déplacements invalides. Entrez -1, 0 ou 1.")
             return
-        self.send_to_server(["action", pseudo] + move.to_list())
+        data = {
+            "action": {
+                "pseudo": pseudo,
+                "move": move.to_list()
+            }
+        }
+        self.send_to_server(data)
 
-    def show_board(self):
-        self.send_to_server(["board"])
-
-    def quit(self):
-        print("Fermeture du client.")
-        self.running = False
+    def list_games(self):
+        data = {
+            "list_games": {}
+        }
+        self.send_to_server(data)
 
     def run(self):
         while self.running:
             print("\n--- Menu ---")
             print("1. S'inscrire")
             print("2. Envoyer une action")
-            print("3. Quitter")
-            print("4. Afficher le plateau")
+            print("3. Liste des parties en attente")
+            print("4. Quitter")
             choice = input("Choix : ")
 
-            action = self.menu_actions.get(choice)
-            if action:
-                action()
+            if choice == '1':
+                self.subscribe()
+            elif choice == '2':
+                self.send_action()
+            elif choice == '3':
+                self.list_games()
+            elif choice == '4':
+                print("Fermeture du client.")
+                self.running = False
             else:
                 print("Choix invalide.")
 
