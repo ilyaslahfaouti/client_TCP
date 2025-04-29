@@ -1,25 +1,20 @@
 import socket
 import json
 
-# Fonction pour envoyer une liste de données JSON au serveur TCP
+
 def send_list_to_server(lst_data):
     HOST = 'localhost'
     PORT = 9999
-
-    # Convertir la liste en chaîne JSON
     message = json.dumps(lst_data)
-
-    # Création de la socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
-            sock.connect((HOST, PORT))  # Connexion au serveur
-            sock.sendall(message.encode('utf-8'))  # Envoi du message
-            response = sock.recv(4096)  # Réception de la réponse
+            sock.connect((HOST, PORT))  
+            sock.sendall(message.encode('utf-8'))  
+            response = sock.recv(4096)  
             print("Réponse du serveur :", response.decode('utf-8'))
         except ConnectionRefusedError:
             print("Erreur : impossible de se connecter au serveur.")
 
-# Menu interactif
 def main():
     while True:
         print("\n--- Menu ---")

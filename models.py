@@ -2,9 +2,8 @@ from abc import ABC, abstractmethod
 import random
 
 class Game:
-
     def __init__(self, nb_max_turn, width, height):
-        self.__nb_max_turn = nb_max_turn # dunder => double underscore ?
+        self.__nb_max_turn = nb_max_turn 
         self.__current_turn = 0
         self.__gameboard = GameBoard(height, width)
         self.__actions = {}
@@ -13,8 +12,8 @@ class Game:
     def nb_max_turn(self):
         return self.__nb_max_turn
 
-    # action: (width, height) (-1,0), (1,0), (0,1),(0,-1)
-    # TODO: use Thread to wait until timeout is reached for action
+   
+    # TODO
     def register_action(self, player, action):
         self.__actions[player] = action
 
@@ -25,8 +24,7 @@ class Game:
 
 
 class Player(ABC):
-
-    # pseudo only 1 letter length
+    
     def __init__(self, pseudo : str, field_distance):
         if len(pseudo) != 1:
             raise ValueError('Max length of pseudo is 1')
